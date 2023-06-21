@@ -23,6 +23,14 @@ type TodoList struct {
 	todos []Todo
 }
 
+func NewTodoList(prevTodos ...Todo) TodoList {
+    todos := make([]Todo, 0)
+    for _, todo := range prevTodos {
+        todos = append(todos, todo)
+    }
+    return TodoList{ todos: todos }
+}
+
 func (t *TodoList) Add(task string) {
 	t.todos = append(t.todos, Todo{task, false})
 }

@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
-    "os/exec"
 )
 
 var COMMANDS = []Command{
@@ -27,13 +27,45 @@ func ClearScreen() {
 type Command string
 
 type Commands struct {
-	commands     []Command
+	commands []Command
 	todoList *TodoList
 	scanner  *bufio.Scanner
 }
 
-func NewCommands(t *TodoList) Commands {
-	commands := Commands{todoList: t, scanner: bufio.NewScanner(os.Stdin)}
+func NewCommands() Commands {
+	prevTodos := make([]Todo, 0)
+	var file *os.File
+	if _, err := os.Stat("todo.txt"); os.IsNotExist(err) {
+		f, err := os.Create("todo.txt")
+		if err != nil {
+			panic(err)
+		}
+		file = f
+	} else {
+		f, err := os.Open("todo.txt")
+		if err != nil {
+			panic(err)
+		}
+		file = f
+	}
+
+    defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) > 0 {
+			if line[1] == 'x' {
+				prevTodos = append(prevTodos, Todo{line[4:], true})
+			} else {
+				prevTodos = append(prevTodos, Todo{line[3:], false})
+			}
+		}
+	}
+
+	todoList := NewTodoList(prevTodos...)
+
+	commands := Commands{todoList: &todoList, scanner: bufio.NewScanner(os.Stdin)}
 	commands.Reset()
 	return commands
 }
@@ -43,17 +75,17 @@ func (c *Commands) Reset() {
 	for _, command := range COMMANDS {
 		switch command {
 		case "Remove task":
-            fallthrough
+			fallthrough
 		case "Toggle task":
-            fallthrough
+			fallthrough
 		case "Clear all":
-            if !c.todoList.IsEmpty() {
-                data = append(data, command)
-            }
+			if !c.todoList.IsEmpty() {
+				data = append(data, command)
+			}
 		case "Clear done":
-            if c.todoList.HasDone() {
-                data = append(data, command)
-            }
+			if c.todoList.HasDone() {
+				data = append(data, command)
+			}
 		default:
 			data = append(data, command)
 		}
@@ -61,8 +93,26 @@ func (c *Commands) Reset() {
 	c.commands = data
 }
 
+func (c *Commands) WriteToFile() {
+    file, err := os.OpenFile("todo.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+    str := ""
+    for _, todo := range c.todoList.todos {
+        fmt.Println(todo)
+        if todo.done {
+            str += fmt.Sprintf("[x] %s\n", todo.task)
+        } else {
+            str += fmt.Sprintf("[] %s\n", todo.task)
+        }
+    }
+    file.WriteString(str)
+}
+
 func (c *Commands) PrintInterface() {
-    ClearScreen()
+	ClearScreen()
 	c.todoList.Print()
 	c.PrintCommands()
 }
@@ -76,7 +126,7 @@ func (c *Commands) PrintCommands() {
 }
 
 func (c *Commands) AddTask() {
-    c.PrintInterface()
+	c.PrintInterface()
 	fmt.Printf("Enter new task: ")
 	var task string
 	if c.scanner.Scan() {
@@ -84,7 +134,7 @@ func (c *Commands) AddTask() {
 		strings.Trim(task, " ")
 	}
 	for len(task) == 0 {
-        c.PrintInterface()
+		c.PrintInterface()
 		fmt.Printf("Empty task given. Enter new task: ")
 		if c.scanner.Scan() {
 			task = c.scanner.Text()
@@ -92,18 +142,19 @@ func (c *Commands) AddTask() {
 		}
 	}
 	c.todoList.Add(task)
+    c.WriteToFile()
 }
 
 func (c *Commands) RemoveTask() {
-    c.PrintInterface()
+	c.PrintInterface()
 	fmt.Printf("Enter task number: ")
 	var input string
 	if c.scanner.Scan() {
 		input = c.scanner.Text()
 	}
-    taskNum, err := strconv.Atoi(input)
-    for err != nil || taskNum < 1 || taskNum > c.todoList.Size() {
-        c.PrintInterface()
+	taskNum, err := strconv.Atoi(input)
+	for err != nil || taskNum < 1 || taskNum > c.todoList.Size() {
+		c.PrintInterface()
 		fmt.Printf("Enter valid task number: ")
 		if c.scanner.Scan() {
 			input = c.scanner.Text()
@@ -111,26 +162,29 @@ func (c *Commands) RemoveTask() {
 		}
 	}
 	c.todoList.Remove(taskNum - 1)
+    c.WriteToFile()
 }
 
 func (c *Commands) ClearAllTasks() {
 	c.todoList.ClearAll()
+    c.WriteToFile()
 }
 
 func (c *Commands) ClearDoneTasks() {
-    c.todoList.ClearDone()
+	c.todoList.ClearDone()
+    c.WriteToFile()
 }
 
 func (c *Commands) ToggleTask() {
-    c.PrintInterface()
+	c.PrintInterface()
 	fmt.Printf("Enter task number: ")
 	var input string
 	if c.scanner.Scan() {
 		input = c.scanner.Text()
 	}
-    taskNum, err := strconv.Atoi(input)
+	taskNum, err := strconv.Atoi(input)
 	for err != nil || taskNum < 0 || taskNum > c.todoList.Size() {
-        c.PrintInterface()
+		c.PrintInterface()
 		fmt.Printf("Enter valid task number: ")
 		if c.scanner.Scan() {
 			input = c.scanner.Text()
@@ -138,10 +192,11 @@ func (c *Commands) ToggleTask() {
 		}
 	}
 	c.todoList.Toggle(taskNum - 1)
+    c.WriteToFile()
 }
 
 func (c *Commands) Runner() {
-    c.PrintInterface()
+	c.PrintInterface()
 	fmt.Printf("Enter command: ")
 	var input string
 	if c.scanner.Scan() {
@@ -149,27 +204,27 @@ func (c *Commands) Runner() {
 	}
 	val, err := strconv.Atoi(input)
 	for err != nil || val < 0 || val >= len(c.commands) {
-        c.PrintInterface()
+		c.PrintInterface()
 		fmt.Printf("Invalid command given. Enter valid command: ")
 		if c.scanner.Scan() {
 			input = c.scanner.Text()
 		}
 		val, err = strconv.Atoi(input)
 	}
-    command := c.commands[val]
+	command := c.commands[val]
 
-    switch command {
-    case "Add task":
-        c.AddTask()
-    case "Remove task":
-        c.RemoveTask()
-    case "Toggle task":
-        c.ToggleTask()
-    case "Clear all":
-        c.ClearAllTasks()
-    case "Clear done":
-        c.ClearDoneTasks()
-    case "Exit":
-        os.Exit(0)
-    }
+	switch command {
+	case "Add task":
+		c.AddTask()
+	case "Remove task":
+		c.RemoveTask()
+	case "Toggle task":
+		c.ToggleTask()
+	case "Clear all":
+		c.ClearAllTasks()
+	case "Clear done":
+		c.ClearDoneTasks()
+	case "Exit":
+		os.Exit(0)
+	}
 }

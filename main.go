@@ -1,8 +1,7 @@
 package main
 
 func main() {
-	todoList := TodoList{}
-    commands := NewCommands(&todoList)
+    commands := NewCommands()
 	for {
         commands.Reset()
         commands.Runner()
