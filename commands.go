@@ -49,7 +49,7 @@ func NewCommands() Commands {
 		file = f
 	}
 
-    defer file.Close()
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -94,21 +94,21 @@ func (c *Commands) Reset() {
 }
 
 func (c *Commands) WriteToFile() {
-    file, err := os.OpenFile("todo.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-    if err != nil {
-        panic(err)
-    }
-    defer file.Close()
-    str := ""
-    for _, todo := range c.todoList.todos {
-        fmt.Println(todo)
-        if todo.done {
-            str += fmt.Sprintf("[x] %s\n", todo.task)
-        } else {
-            str += fmt.Sprintf("[] %s\n", todo.task)
-        }
-    }
-    file.WriteString(str)
+	file, err := os.OpenFile("todo.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	str := ""
+	for _, todo := range c.todoList.todos {
+		fmt.Println(todo)
+		if todo.done {
+			str += fmt.Sprintf("[x] %s\n", todo.task)
+		} else {
+			str += fmt.Sprintf("[] %s\n", todo.task)
+		}
+	}
+	file.WriteString(str)
 }
 
 func (c *Commands) PrintInterface() {
@@ -142,7 +142,7 @@ func (c *Commands) AddTask() {
 		}
 	}
 	c.todoList.Add(task)
-    c.WriteToFile()
+	c.WriteToFile()
 }
 
 func (c *Commands) RemoveTask() {
@@ -162,17 +162,17 @@ func (c *Commands) RemoveTask() {
 		}
 	}
 	c.todoList.Remove(taskNum - 1)
-    c.WriteToFile()
+	c.WriteToFile()
 }
 
 func (c *Commands) ClearAllTasks() {
 	c.todoList.ClearAll()
-    c.WriteToFile()
+	c.WriteToFile()
 }
 
 func (c *Commands) ClearDoneTasks() {
 	c.todoList.ClearDone()
-    c.WriteToFile()
+	c.WriteToFile()
 }
 
 func (c *Commands) ToggleTask() {
@@ -192,7 +192,7 @@ func (c *Commands) ToggleTask() {
 		}
 	}
 	c.todoList.Toggle(taskNum - 1)
-    c.WriteToFile()
+	c.WriteToFile()
 }
 
 func (c *Commands) Runner() {
