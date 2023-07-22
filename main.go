@@ -7,17 +7,15 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, world!")
 	InitDB()
 	defer DB.Close()
-	// SeedDB()
 	tasks, err := GetTasks()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-    jsonData, err := json.MarshalIndent(tasks, "", " ")
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println(string(jsonData))
+	jsonData, err := json.MarshalIndent(tasks, "", " ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(jsonData))
 }

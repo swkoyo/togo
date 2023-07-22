@@ -55,7 +55,7 @@ func scanTask(rows *sql.Rows) (*Task, error) {
 		}
 	}
 
-    return &t, nil
+	return &t, nil
 }
 
 func GetTask(id int) (*Task, error) {
@@ -81,10 +81,10 @@ func GetTask(id int) (*Task, error) {
 
 	var t *Task
 	if rows.Next() {
-        t, err = scanTask(rows)
-        if err != nil {
-            return nil, err
-        }
+		t, err = scanTask(rows)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return t, nil
 }
@@ -111,10 +111,10 @@ func GetTasks() ([]Task, error) {
 
 	tasks := []Task{}
 	for rows.Next() {
-        t, err := scanTask(rows)
-        if err != nil {
-            return nil, err
-        }
+		t, err := scanTask(rows)
+		if err != nil {
+			return nil, err
+		}
 		tasks = append(tasks, *t)
 	}
 	return tasks, nil

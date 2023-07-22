@@ -1,8 +1,8 @@
 package main
 
 type Category struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 func GetCategories() ([]Category, error) {
@@ -15,19 +15,19 @@ func GetCategories() ([]Category, error) {
 	}
 	defer rows.Close()
 
-    categories := []Category{}
+	categories := []Category{}
 
 	for rows.Next() {
-        var c Category
+		var c Category
 
 		err := rows.Scan(
-            &c.ID,
-            &c.Name,
+			&c.ID,
+			&c.Name,
 		)
 		if err != nil {
 			return nil, err
 		}
-        categories = append(categories, c)
+		categories = append(categories, c)
 	}
 	return categories, nil
 }
