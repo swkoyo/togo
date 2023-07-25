@@ -2,37 +2,24 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/jroimartin/gocui"
 )
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("side", -1, -1, maxX, 10); err != nil {
-	if err != gocui.ErrUnknownView {
-			return err
-		}
-		logo, err := ioutil.ReadFile("logo.txt")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprint(v, string(logo))
-	}
-	if v, err := g.SetView("main", -1, 10, maxX, maxY); err != nil {
+	if v, err := g.SetView("main", 0, 0, maxX - 1, maxY - 1); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		if jsonFile, err := os.Open("test.json"); err != nil {
-			if err != nil {
-				panic(err)
-			}
-			defer jsonFile.Close()
-
+		tasks, err := GetTasks()
+		if err != nil {
+			return err
 		}
-		fmt.Fprintf(v, "Hello\nThere")
+		for _, task := range tasks {
+			fmt.Fprintf(v, "[ ] %s\n", task.Name)
+		}
 		v.Editable = true
 		v.Wrap = true
 		if _, err := g.SetCurrentView("main"); err != nil {
