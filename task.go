@@ -147,6 +147,12 @@ func (t *Task) Update() error {
 	return err
 }
 
+func (t *Task) Toggle() error {
+	t.IsComplete = !t.IsComplete
+	err := t.Update()
+	return err
+}
+
 func (t *Task) Delete() error {
 	_, err := DB.Exec(`DELETE FROM tasks WHERE id = ?`, t.ID)
 	return err
